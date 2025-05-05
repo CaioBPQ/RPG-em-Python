@@ -32,6 +32,56 @@ def escolher_classe():
             return classe
         print("Classe inválida!")
 
+def itens():
+    return {
+        "Espada": 10,
+        "Espada Lendária": 20,
+        "Armadura": 15,
+        "Armadura Mística": 25,
+        "Poção de Vida": 20,
+        "Poção de Mana": 20,
+        "Escudo": 25,
+        "Arco": 30
+    }
+
+def loot():
+    global gold, vida, mana
+    todos_itens = itens()
+    bau = random.randint(1, 100)
+    
+    if bau <= 50:
+        print("Você encontrou um baú vazio!")
+    elif 50 < bau <= 80:
+        ouro = random.randint(10, 50)
+        print(f"Você encontrou {ouro} de ouro!")
+        gold += ouro
+    elif 80 < bau <= 95:
+        item = random.choice(["Espada", "Armadura", "Poção de Mana"])
+        print(f"Você encontrou um(a) {item}!")
+        aplicar_item(item, todos_itens)
+    else:
+        item = random.choice(["Espada Lendária", "Armadura Mística", "Poção de Vida"])
+        print(f"Você encontrou um(a) {item} raro(a)!")
+        gold += 100
+        aplicar_item(item, todos_itens)
+
+def aplicar_item(item, todos_itens):
+    global vida, mana
+    bonus = todos_itens.get(item, 0)
+    
+    if "Espada" in item or item == "Arco":
+        atributos["forca"] += bonus // 10
+        print(f"⚔️ Sua força aumentou em {bonus // 10}!")
+    elif "Armadura" in item or item == "Escudo":
+        atributos["resistencia"] += bonus // 10
+        print(f"🛡️ Sua resistência aumentou em {bonus // 10}!")
+    elif item == "Poção de Vida":
+        vida += bonus
+        print(f"❤️ Sua vida aumentou em {bonus}!")
+    elif item == "Poção de Mana":
+        mana += bonus
+        print(f"💧 Sua mana aumentou em {bonus}!")
+
 def aplicar_atributos(classe):
     global vida, mana
     if classe == "guerreiro":
@@ -63,15 +113,18 @@ def mapas(classe):
     print(f"\nFim da jornada! Ouro: {gold}, Vida: {vida:.0f}")
 
 def explorar_mapa(nivel, classe):
-    chance_encontro = random.random()
-    if chance_encontro < 0.7:
+    chance = random.random()
+    if chance < 0.6:
         grupo = gerar_inimigos_por_nivel(nivel)
         for inimigo in grupo:
             batalha(inimigo)
             if vida <= 0:
                 break
+    elif chance < 0.9:
+        print("Você encontrou um baú misterioso...")
+        loot()  # chama o sistema de loot
     else:
-        print("Você explorou sem encontrar inimigos.")
+        print("Você explorou sem encontrar nada.")
 
 def gerar_inimigos_por_nivel(nivel):
     fracos = ["Goblin", "Lobo", "Esqueleto"]
@@ -137,23 +190,55 @@ def batalha_goblin_quiz(hp, atk):
         print(f"❌ Errado! Você levou {atk} de dano. Vida atual: {vida:.0f}")
 
 def batalha_combate(hp, atk, inimigo):
-    global vida, gold
+    global vida, mana, gold
+    defesa_ativa = False
     forca_jogador = atributos.get("forca", 5)
+
     while hp > 0 and vida > 0:
-        dano = random.randint(forca_jogador - 1, forca_jogador + 3)
-        hp -= dano
-        print(f"💥 Você atacou e causou {dano} de dano! Vida do {inimigo}: {max(hp, 0)}")
+        print(f"\n👊 {inimigo} - Vida: {hp} | 🧍 Você - Vida: {vida:.0f}, Mana: {mana:.0f}")
+        print("O que deseja fazer?")
+        print("1 - Atacar")
+        print("2 - Usar Poção de Vida (20 de cura, 10 de mana)")
+        print("3 - Defender (reduz dano pela metade no próximo ataque)")
+
+        acao = input("Escolha sua ação (1/2/3): ").strip()
+
+        if acao == "1":
+            dano = random.randint(forca_jogador - 1, forca_jogador + 2)
+            hp -= dano
+            print(f"💥 Você atacou e causou {dano} de dano!")
+
+        elif acao == "2":
+            if mana >= 10:
+                cura = 20
+                vida += cura
+                mana -= 10
+                print(f"🧪 Você usou uma Poção de Vida. +{cura} vida, -10 mana.")
+            else:
+                print("⚠️ Mana insuficiente para usar poção!")
+
+        elif acao == "3":
+            defesa_ativa = True
+            print("🛡️ Você se prepara para se defender!")
+        else:
+            print("❌ Ação inválida! Você perdeu o turno.")
+
+        # Inimigo ataca (se ainda estiver vivo)
+        if hp > 0:
+            dano_recebido = atk // 2 if defesa_ativa else atk
+            vida -= dano_recebido
+            print(f"⚔️ O {inimigo} atacou e causou {dano_recebido} de dano!")
+            defesa_ativa = False  # zera após um uso
+
         time.sleep(0.5)
 
-        if hp > 0:
-            vida -= atk
-            print(f"⚠️ {inimigo} contra-atacou e causou {atk} de dano! Sua vida: {max(vida, 0)}")
-            time.sleep(0.5)
-
     if vida > 0:
-        ganho = random.randint(20, 100)
+        ganho = random.randint(20, 60)
         gold += ganho
-        print(f"🏆 Você derrotou {inimigo} e ganhou {ganho} de ouro!")
+        print(f"\n🏆 Você derrotou o {inimigo} e ganhou {ganho} de ouro!")
+    else:
+        print(f"\n💀 Você foi derrotado pelo {inimigo}...")
+
 
 def quest():
     perguntas = [
@@ -169,6 +254,7 @@ def quest():
         "Você consegue falar goblinês fluente? (sim/não)"
     ]
     return random.choice(perguntas)
+
 
 # Início do jogo
 character()
