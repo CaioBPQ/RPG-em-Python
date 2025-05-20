@@ -364,7 +364,7 @@ npc_fase2= NPC(
     dialogo=[
         'Ah, jovem aventureiro…',
         'Preciso que você recupere 3 baús perdidos.',
-        'Eles estão espalhados pela Lagoa dos Dragões.'
+        'Eles estão espalhados pelo Berço de Kharzuth'
     ],
     quest=quest_baus
 )
@@ -374,7 +374,7 @@ npc_fase3 = NPC(
     dialogo=[
         'Ah, jovem aventureiro…',
         'Preciso que você recupere 3 baús perdidos.',
-        'Eles estão espalhados pela Lagoa dos Dragões.'
+        'Eles estão espalhados pelo castelo de Drenvaar .'
     ],
     quest=quest_baus
 )
