@@ -1,3 +1,34 @@
+from collections import Counter
+import random
+
+itens_1 = {
+    "Espada quebrada": {"ataque": 5, "durabilidade": 10},
+    "Escudo de madeira": {"defesa": 3, "durabilidade": 15},
+    "Poção de cura 1": {"cura": 10, "quantidade": 1},
+    "katana enferrujada": {"ataque": 7, "durabilidade": 8},  
+}  
+itens = [
+    ["Poções", "Poção de cura pequena", "Poção de cura média", "Poção de cura grande"],
+    ["Armaduras", "Armadura de couro", "Armadura de ferro", "Armadura de mitril"],
+    ["Armas", "Espada de madeira", "Espada de ferro", "Espada de mitril"]
+]
+
+itens_2 = {
+    "Espada longa": {"ataque": 10, "durabilidade": 20},
+    "Peitoral de ferro": {"defesa": 5, "durabilidade": 25},
+    "Poção de cura 2": {"cura": 20, "quantidade": 1},
+    "katana afiada": {"ataque": 12, "durabilidade": 15},
+}
+
+itens_3 = {
+    "Espada Sagrada": {"ataque": 15, "durabilidade": 30},
+    "Escudo Forjado": {"defesa": 8, "durabilidade": 35},
+    "Poção de cura 3": {"cura": 30, "quantidade": 1},
+    "katana lendária": {"ataque": 20, "durabilidade": 25},
+    "cajado do mago supremo": {"ataque": 15, "durabilidade": 28},
+}
+
+
 class Personagem:
     def __init__(self, nome, defesa, forca, inteligencia, classe, habilidade):
         self.nome = nome
@@ -8,7 +39,11 @@ class Personagem:
         self.defesa = defesa
         self.classe = classe
         self.habilidade = habilidade
-        self.inventario = []
+        self.inventario = [
+            [],  # Armas
+            [],  # Armaduras
+            []   # Itens/Poções
+        ]
         self.xp = 0
         self.nivel = 1
         self.pontos = 0
@@ -17,8 +52,87 @@ class Personagem:
         self.furioso = False
         self.ouro = 0
         self.contador_de_baus = 0
+        self.arma_equipada = None
+        self.armadura_equipada = None
         self.quests_ativas = []
         self.quests_concluidas = []
+
+    def forca_total(self):
+        bonus = self.arma_equipada["ataque"] if self.arma_equipada and "ataque" in self.arma_equipada else 0
+        return self.forca + bonus
+
+    def defesa_total(self):
+        bonus = self.armadura_equipada["defesa"] if self.armadura_equipada and "defesa" in self.armadura_equipada else 0
+        return self.defesa + bonus
+
+    def mostrar_inventario(self):
+        categorias = ["Armas", "Armaduras", "Itens"]
+        print("\nInventário:")
+        print(f"Itens equipados: Arma: {self.arma_equipada['nome'] if self.arma_equipada else 'Nenhuma'}, Armadura: {self.armadura_equipada['nome'] if self.armadura_equipada else 'Nenhuma'}")
+        print(f"Vida: {self.vida}/{self.vida_maxima}, XP: {self.xp}, Nível: {self.nivel}, Ouro: {self.ouro}")
+        print(f"Atributos - Força: {self.forca_total()}, Defesa: {self.defesa_total()},")
+        for i, categoria in enumerate(categorias):
+            print(f"\n{categoria}:")
+            if not self.inventario[i]:
+                print("Nenhum item nesta categoria.")
+            else:
+                nomes = [item["nome"] for item in self.inventario[i]]
+                contagem = Counter(nomes)
+                ja_mostrados = set()
+                for idx, item in enumerate(self.inventario[i]):
+                    nome = item["nome"]
+                    if nome not in ja_mostrados:
+                        quantidade = contagem[nome]
+                        atributos = ", ".join(
+                            f"{k}: {v}" for k, v in item.items() if k != "nome"
+                        )
+                        if quantidade > 1:
+                            print(f"{idx+1}. {nome} x{quantidade} ({atributos})")
+                        else:
+                            print(f"{idx+1}. {nome} ({atributos})")
+                        ja_mostrados.add(nome)
+
+        escolha = input("\nDeseja usar ou equipar algum item? (1-Sim, 2-Não): ")
+        if escolha == "1":
+            print("Categorias: 1-Armas, 2-Armaduras, 3-Itens")
+            try:
+                cat = int(input("Escolha a categoria: "))
+                if cat < 1 or cat > 3 or not self.inventario[cat-1]:
+                    print("Categoria inválida ou vazia.")
+                    return
+                for idx, item in enumerate(self.inventario[cat-1]):
+                    print(f"{idx+1}. {item['nome']}")
+                idx_item = int(input("Escolha o número do item: ")) - 1
+                if idx_item < 0 or idx_item >= len(self.inventario[cat-1]):
+                    print("Item inválido.")
+                    return
+                item = self.inventario[cat-1][idx_item]
+                if cat == 1:
+                    self.arma_equipada = item
+                    print(f"{self.nome} equipou a arma: {item['nome']}")
+                elif cat == 2:
+                    self.armadura_equipada = item
+                    print(f"{self.nome} equipou a armadura: {item['nome']}")
+                elif cat == 3:
+                    if "cura" in item:
+                        self.curar(item["cura"])
+                        item["quantidade"] -= 1
+                        if item["quantidade"] <= 0:
+                            self.inventario[2].pop(idx_item)
+                            print(f"{item['nome']} acabou!")
+                    else:
+                        print("Esse item não pode ser usado.")
+            except Exception:
+                print("Entrada inválida.")
+        else:
+            print("Ok, voltando ao jogo.")
+
+    def usar_item(self, categoria, item):
+        if categoria < 1 or categoria > 3:
+            print("Categoria inválida. Escolha entre 1 (Armas), 2 (Armaduras) ou 3 (Itens).")
+        elif item not in self.inventario[categoria - 1]:
+            print(f"{item} não encontrado no inventário.")
+
 
     def habilidade_ativa(self, inimigo):
         chance = random.random()
@@ -46,12 +160,20 @@ class Personagem:
 
     def atacar(self, inimigo):
         self.habilidade_ativa(inimigo)
-        ataque_total = random.randint(1,5) + self.forca
+        ataque_total = random.randint(1, 5) + self.forca_total()
+        if self.arma_equipada and "ataque" in self.arma_equipada:
+            self.arma_equipada["durabilidade"] -= 1
+            if self.arma_equipada["durabilidade"] <= 0:
+                print(f"Sua arma {self.arma_equipada['nome']} quebrou!")
+                self.arma_equipada = None
         if self.furioso:
             ataque_total *= 2
             print(f"\n{self.nome} está furioso! Ataque dobrado!")
             self.furioso = False
-        dano = max(0, ataque_total - inimigo.defesa + random.randint(-2, 2))
+        defesa_total = inimigo.defesa
+        if hasattr(inimigo, "armadura_equipada") and inimigo.armadura_equipada and "defesa" in inimigo.armadura_equipada:
+            defesa_total += inimigo.armadura_equipada["defesa"]
+        dano = max(0, ataque_total - defesa_total + random.randint(-2, 2))
         inimigo.vida -= dano
         print(f"\n{self.nome} atacou {inimigo.nome} e causou {dano} de dano!\n")
         if inimigo.vida <= 0:
@@ -59,11 +181,9 @@ class Personagem:
         else:
             print(f"{inimigo.nome} ainda tem {inimigo.vida} de vida!")
 
-    def esta_vivo(self):
-        return self.vida > 0
-
     def curar(self, quantidade):
-        self.vida += quantidade
+        cura_total = quantidade + self.arcano  # Inteligência aumenta a cura
+        self.vida += cura_total
         if self.vida > self.vida_maxima:
             self.vida = self.vida_maxima
         print(f"{self.nome} se curou e agora tem {self.vida}/{self.vida_maxima} de vida!")
@@ -115,3 +235,166 @@ class Personagem:
 
     def _str_(self):
         return f"{self.nome} (Classe: {self.classe})"
+    
+class NPC:
+    def __init__(self, nome, dialogo, quest=None):
+        self.nome = nome
+        self.dialogo = dialogo
+        self.quest = quest
+
+    def falar(self):
+        if isinstance(self.dialogo, list):
+            for linha in self.dialogo:
+                print(linha)
+        else:
+            print(self.dialogo)
+
+    def oferecer_quest(self, jogador):
+        if not self.quest:
+            return
+        print(f"\n{self.nome} diz:")
+        self.falar()
+        if not jogador.tem_quest(self.quest.id) and not self.quest.concluida:
+            aceita = input("Aceitar missão? (s/n): ").strip().lower()
+            if aceita in ['s', 'sim']:
+                jogador.ativar_quest(self.quest)
+                print(f"Missão '{self.quest.titulo}' ativada!")
+            else:
+                print("Talvez depois…")
+        elif jogador.tem_quest(self.quest.id) and not self.quest.concluida:
+            print("Você já ativou essa missão.")
+        elif self.quest.concluida:
+            print("Você já concluiu essa missão.")
+
+# === CLASSE DO INIMIGO ===
+class Inimigo:
+    def __init__(self, nome, vida, ataque, defesa, habilidade):
+        self.nome = nome
+        self.vida = vida
+        self.vida_maxima = vida
+        self.ataque = ataque
+        self.defesa = defesa
+        self.habilidade = habilidade
+        self.envenenado = False
+        self.turnos_envenenado = 0
+        self.furioso = False
+
+    def habilidade_ativa(self, jogador):
+        chance = random.random()
+        if chance < 0.3:
+            if self.habilidade == "cura":
+                cura = random.randint(10, 20)
+                self.curar(cura)
+            elif self.habilidade == "furia":
+                self.furioso = True
+                print(f"{self.nome} entrou em fúria! Ataque dobrado!")
+            elif self.habilidade == "veneno":
+                jogador.envenenado = True
+                jogador.turnos_envenenado = 3
+                print(f"{self.nome} envenenou {jogador.nome}!")
+
+    def atacar(self, jogador):
+        self.habilidade_ativa(jogador)
+        ataque_total = random.randint(1, self.ataque)
+        if self.furioso:
+            ataque_total *= 2
+            print(f"{self.nome} está furioso! Ataque dobrado!")
+            self.furioso = False
+        dano = max(0, ataque_total - jogador.defesa + random.randint(0, 2))
+        jogador.vida -= dano
+        print(f"{self.nome} atacou {jogador.nome} e causou {dano} de dano!")
+        if jogador.vida <= 0:
+            print(f"{jogador.nome} foi derrotado!")
+        else:
+            print(f"{jogador.nome} ainda tem {jogador.vida} de vida!")
+
+    def veneno(self):
+        if self.envenenado:
+            dano = random.randint(5, 15)
+            self.vida -= dano
+            self.turnos_envenenado -= 1
+            print(f"{self.nome} está envenenado! Perdeu {dano} de vida!")
+            if self.turnos_envenenado <= 0:
+                self.envenenado = False
+                print(f"{self.nome} não está mais envenenado!")
+
+    def esta_vivo(self):
+        return self.vida > 0
+
+    def curar(self, quantidade):
+        self.vida += quantidade
+        if self.vida > self.vida_maxima:
+            self.vida = self.vida_maxima
+        print(f"{self.nome} se curou e agora tem {self.vida}/{self.vida_maxima} de vida!")
+
+# === CLASSE DE QUEST ===
+class Quest:
+    def __init__(self, id, titulo, descricao, condicao_conclusao, recompensa):
+        self.id = id
+        self.titulo = titulo
+        self.descricao = descricao
+        self.condicao_conclusao = condicao_conclusao
+        self.recompensa = recompensa
+        self.concluida = False
+
+    def checar(self, jogador):
+        if not self.concluida and self.condicao_conclusao(jogador):
+            self.concluida = True
+            self.recompensa(jogador)
+            print(f"Missão '{self.titulo}' concluída!")
+
+# === ESCOLHA DE CLASSE ===
+def escolher_classe():
+    nome = input("Digite o nome do seu personagem: ")
+
+    print("\nEscolha sua classe:")
+    print("1. Guerreiro (vida alta, ataque médio, defesa alta)")
+    print("2. Mago (vida baixa, ataque alto, defesa baixa)")
+    print("3. Arqueiro (vida média, ataque médio-alto, defesa média)")
+
+    opcoes = {
+        "1": "Guerreiro",
+        "2": "Mago",
+        "3": "Arqueiro",
+        "4": "classe dev"
+    }
+
+    while True:
+        escolha = input("\nEscolha sua classe e siga em sua jornada: ").lower()
+        classe = opcoes.get(escolha)
+        if classe:
+            break
+        else:
+            print("Classe inválida, informe novamente por favor.")
+
+    if classe == "Guerreiro":
+        jogador = Personagem(nome, defesa=7, forca=6, inteligencia=3, classe=classe, habilidade="fúria")
+    elif classe == "Mago":
+        jogador = Personagem(nome, defesa=3, forca=4, inteligencia=8, classe=classe, habilidade="cura")
+    elif classe == "Arqueiro":
+        jogador = Personagem(nome, defesa=5, forca=7, inteligencia=4, classe=classe, habilidade="veneno")
+    elif classe == "classe dev":
+        jogador = Personagem(nome, defesa=100, forca=100, inteligencia=100, classe=classe, habilidade="cura")
+        print("Você é um dev! Você tem todos os atributos maximizados!")
+
+    print(f"\nJogador criado com sucesso: {jogador.nome}, da classe {classe}!\n")
+    return jogador
+
+# === NARRATIVA E FASES ===
+def narrativa_inicio():
+    print("\nO mundo está em colapso. O tempo se quebrou em fragmentos.")
+    print("Você acorda em uma clareira estranha, com memórias confusas.")
+    print("Uma voz misteriosa sussurra: 'Restaure o tempo... ou tudo perecerá.'")
+    input("Pressione Enter para continuar...\n")
+    
+
+heroi = Personagem("Herói", 5, 5, 5, "Guerreiro", "cura")
+
+heroi.inventario[0].append({"nome": "Espada longa", **itens_2["Espada longa"]})
+heroi.inventario[0].append({"nome": "Espada longa", **itens_2["Espada longa"]})
+heroi.inventario[1].append({"nome": "Escudo de ferro", **itens_2["Escudo de ferro"]})
+heroi.inventario[2].append({"nome": "Poção de cura 2", **itens_2["Poção de cura 2"]})
+
+heroi.mostrar_inventario()
+
+heroi.mostrar_inventario()

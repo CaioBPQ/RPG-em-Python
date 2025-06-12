@@ -9,7 +9,7 @@
 
 import random
 import time
-from classes_do_rpg import Personagem, NPC, Inimigo, Quest, escolher_classe,narrativa_inicio
+from classes_do_rpg import Personagem, NPC, Inimigo, Quest, escolher_classe, narrativa_inicio
 
 # === CLASSE DO JOGADOR ===
 local_atual = 1
@@ -17,8 +17,13 @@ itens_1 = {
     "Espada quebrada": {"ataque": 5, "durabilidade": 10},
     "Escudo de madeira": {"defesa": 3, "durabilidade": 15},
     "Poção de cura 1": {"cura": 10, "quantidade": 1},
-    "katana enferrujada": {"ataque": 7, "durabilidade": 8},    
-}
+    "katana enferrujada": {"ataque": 7, "durabilidade": 8},  
+}  
+itens = [
+    ["Poções", "Poção de cura pequena", "Poção de cura média", "Poção de cura grande"],
+    ["Armaduras", "Armadura de couro", "Armadura de ferro", "Armadura de mitril"],
+    ["Armas", "Espada de madeira", "Espada de ferro", "Espada de mitril"]
+]
 
 itens_2 = {
     "Espada longa": {"ataque": 10, "durabilidade": 20},
@@ -220,7 +225,7 @@ def explorar(jogador):
 
     eventos = ["inimigo", "bau", "npc", "nada", "vendedor"]
     evento = random.choices(eventos, weights=[0.3, 0.3, 0.2, 0.1, 0.1])[0]
-    while True:
+    while jogador.esta_vivo():
         if local_atual == 1:
         
         
@@ -803,70 +808,82 @@ def explorar(jogador):
                     inimigo = Inimigo("Drenvaar - O Senhor do Tempo", 100, 100, 100, "furia")
                     batalha(jogador, inimigo)
                     game_over(jogador)
-                    print("Parabéns! Você derrotou o Senhor do Tempo e restaurou o fluxo temporal!")
-                    print("FIM DE JOGO. Muito obrigado por jogar!")
-                    deseja_jogar_novamente = input("Deseja jogar novamente? (s/n): ").lower().strip()
-                    while deseja_jogar_novamente not in ["s", "sim", "n", "nao", "não"]:
-                     print("Erro, informe novamente: ")
-                     deseja_jogar_novamente = input("Deseja jogar novamente? (s/n): ").lower().strip()
-                    if deseja_jogar_novamente in ["s", "sim"]:
-                     print("Reiniciando o jogo...")
-                     time.sleep(2)
-                     jogar()
-                    elif deseja_jogar_novamente in ["n", "não", "nao"]:
-                      print("Obrigado por jogar! Até a próxima!")
-                      exit()
-                    while deseja_jogar_novamente not in ["s", "sim", "n", "nao", "não"]:
-                     print("Erro, informe novamente: ")
-                     deseja_jogar_novamente = input("Deseja jogar novamente? (s/n): ").lower().strip()
-                   
-                    
-                    
+
                 print("Você encontrou Drenvaar - Senhor do Tempo!")
                 inimigo = Inimigo("Drenvaar - Senhor do Tempo", 25, 7, 4, "veneno")
                 batalha(jogador, inimigo)
                 game_over(jogador)
-                print("Parabéns! Você derrotou o Senhor do Tempo e restaurou o fluxo temporal!")
-                print("FIM DE JOGO. Muito obrigado por jogar!")
-                deseja_jogar_novamente = input("Deseja jogar novamente? (s/n): ").lower().strip()
-                while deseja_jogar_novamente not in ["s", "sim", "n", "nao", "não"]:
-                 print("Erro, informe novamente: ")
-                 deseja_jogar_novamente = input("Deseja jogar novamente? (s/n): ").lower().strip()
-                if deseja_jogar_novamente in ["s", "sim"]:
-                 print("Reiniciando o jogo...")
-                 time.sleep(2)
-                 jogar()
-                elif deseja_jogar_novamente in ["n", "não", "nao"]:
-                 print("Obrigado por jogar! Até a próxima!")
-                 exit()
-                while deseja_jogar_novamente not in ["s", "sim", "n", "nao", "não"]:
-                 print("Erro, informe novamente: ")
-                 deseja_jogar_novamente = input("Deseja jogar novamente? (s/n): ").lower().strip()          
-        else:
-            if evento == "bau":
-                print("Você encontrou um baú escondido!")
-                recompensa = random.choice(["ouro", "item", "poção"])
-                if recompensa == "ouro":
-                    ganho = random.randint(10, 50)
-                    jogador.ouro += ganho
-                    print(f"Você encontrou {ganho} moedas no baú!")
-                elif recompensa == "item":
-                    item = random.choice(["Adaga Rústica", "Elmo de Couro"])
-                    jogador.inventario.append(item)
-                    print(f"Você encontrou um item raro: {item}!")
-                elif recompensa == "poção":
-                    jogador.inventario.append("Poção de cura pequena")
-                    print("Você encontrou uma Poção de cura pequena!")
+                print("Parabéns! Você derrotou o Senhor do Tempo e atravessou o portal para restaurar o tempo!")        
+        
+        elif local_atual == 4:
+           print ("Você atravessou o portal do tempo e chegou em ???")
+           print ("Você não sabe onde está, mas sente que é o fim de sua jornada.")
+           escolha = input("Quer explorar a região? (s/n): ").lower().strip()
+           while escolha == ["s", "sim"]:
+                print("Você começou a explorar o desconhecido...\n")
+                time.sleep(1.5)
+                print("Você encontrou um baú misterioso!")
+                item_encontrado = random.choice(list(itens_3, itens_1, itens_2 .keys()))
+                inventario.append(item_encontrado)
+                print(f"Você encontrou: {item_encontrado}\n")
                 jogador.contador_de_baus += 1
-            elif evento == "npc":
-                print("Você encontrou um viajante misterioso...")
-                visitar_npc(jogador)
-            elif evento == "vendedor":
-                vendedor(jogador)
-            else:
-                print("Você caminhou por um tempo, mas não encontrou nada além de silêncio e vento...")
-
-   
+                if jogador.contador_de_baus >= 3:
+                    print("Você encontrou um goblin que saiu de um portal, no meio da vastido do fundo branco!!")
+                    print("""Goblin chega sorrateiramente em você e pergunta:
+                    quer participar de um jogo de adivinhação?""")
+                    escolhaGoblin = input("Quer participar do jogo de adivinhação? (s/n): ").lower().strip()
+                    while escolhaGoblin not in ["s", "sim", "n", "nao", "não"]:
+                        print("Erro, informe novamente: ")
+                        escolhaGoblin = input("Quer participar do jogo de adivinhação? (s/n): ").lower().strip()
+                    if escolhaGoblin in ["s", "sim"]:
+                        print("Você aceitou o desafio do goblin!")
+                        print("O goblin lhe faz 3 perguntas:")
+                        pergunta1 = input("Qual é a capital das Terras Neutras ").lower().strip()
+                        if pergunta1 == "Berço de Kharzuth":
+                            print("Parabéns! Você acertou a primeira pergunta!")
+                            print("O goblin te dá 20 moedas!")
+                            jogador.ouro += 20
+                            print(f"Você agora tem {jogador.ouro} moedas.")
+                        else:
+                            print("Resposta errada! O goblin te esfaqueia")
+                            Vida -= 10
+                            print(f"Você perdeu 10 de vida. Vida atual: {jogador.vida}")
+                            if jogador.vida <= 0:
+                                print("Você morreu! Fim de jogo.")
+                                return
+                            else:
+                                print("essa doeu nao é mesmo?")
+                            pergunta2 = input("Qual é o nome do criador dos dragões? ").lower().strip()
+                        if pergunta2 == "kharzuth":
+                            print("Parabéns! Você acertou a segunda pergunta!")
+                            print("O goblin te dá 20 moedas!")
+                            jogador.ouro += 20
+                            print(f"Você agora tem {jogador.ouro} moedas.")
+                        else:
+                            print("Resposta errada! O goblin te esfaqueia")
+                            Vida -= 10
+                            print(f"Você perdeu 10 de vida. Vida atual: {jogador.vida}")
+                            if jogador.vida <= 0:
+                                print("Você morreu! Fim de jogo.")
+                                return
+                            else:
+                                print("essa doeu nao é mesmo?")
+                            pergunta3 = input("onde estamos? ").lower().strip()
+                        if pergunta3 == "???" or "nao sei" or "não sei" or "no tempo":
+                            print("Parabéns! Você acertou a terceira pergunta!")
+                            print("O goblin te dá 20 moedas!")
+                            jogador.ouro += 20
+                            print(f"Você agora tem {jogador.ouro} moedas.")
+                            print("O goblin desaparece em um portal, deixando você sozinho no desconhecido.")
+                        else:
+                            print("Resposta errada! O goblin te esfaqueia")
+                            Vida -= 10
+                            print(f"Você perdeu 10 de vida. Vida atual: {jogador.vida}")
+                            if jogador.vida <= 0:
+                                print("Você morreu! Fim de jogo.")
+                                return
+                            else:
+                                print("O goblin desaparece em um portal, deixando você sozinho no desconhecido.")
 
 # === LOOP PRINCIPAL ===
 def jogar():
