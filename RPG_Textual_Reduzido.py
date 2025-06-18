@@ -324,9 +324,9 @@ def jogar():
     print(f"Bem-vindo, {jogador.nome}! Sua aventura começa agora.\n")
 
     fases = [
-        (1, itens_1, "Lagoa dos Dragões", "Dragão Ancião", (30, 10, 5, "furia")),
-        (2, itens_2, "Berço de Kharzuth", "Kharzuth - Criador dos Dragões", (40, 12, 7, "cura")),
-        (3, itens_3, "Castelo de Drenvaar", "Drenvaar - Senhor do Tempo", (50, 15, 9, "veneno")),
+        (1, itens_1, "Lagoa dos Dragões", "Dragão Ancião", (40, 8, 5, "furia")),
+        (2, itens_2, "Berço de Kharzuth", "Kharzuth - Criador dos Dragões", (60, 10, 7, "cura")),
+        (3, itens_3, "Castelo de Drenvaar", "Drenvaar - Senhor do Tempo", (80, 12, 9, "veneno")),
     ]
 
     for idx, (local, itens_fase, nome_area, boss_nome, boss_stats) in enumerate(fases, 1):
@@ -334,18 +334,17 @@ def jogar():
         explorar(jogador, local, itens_fase, nome_area)
         if not jogador.esta_vivo():
             return
-        # Boss da fase
         print(f"\nVocê encontrou o boss: {boss_nome}!")
         boss = Inimigo(boss_nome, *boss_stats)
         batalha(jogador, boss)
         if not jogador.esta_vivo():
             return
         print(f"Parabéns! Você derrotou {boss_nome} e pode avançar para a próxima área!")
-        jogador.contador_de_baus = 0  # Reseta para próxima fase (opcional)
+        jogador.contador_de_baus = 0  
 
     print("Você atravessou o portal do tempo e chegou em ???")
     print("Você não sabe onde está, mas sente que é o fim de sua jornada.")
-    jogador.contador_de_baus = 0  # Reseta para o evento do portal
+    jogador.contador_de_baus = 0  
     while True:
         escolha = input_comandos("Quer explorar a região? (s/n): ", jogador).lower().strip()
         if escolha not in ["s", "sim"]:
