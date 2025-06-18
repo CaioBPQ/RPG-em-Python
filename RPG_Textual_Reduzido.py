@@ -287,7 +287,7 @@ def deseja_ir_para_proximo_mapa():
 def evento_aleatorio(jogador, itens_fase):
     evento = random.choices(
         ["nada", "bau", "inimigo", "vendedor", "npc"],
-        weights=[10, 25, 10, 15, 2000],
+        weights=[10, 25, 9, 15, 25],
         k=1
     )[0]
 
