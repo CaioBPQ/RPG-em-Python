@@ -1,5 +1,6 @@
 from collections import Counter
 import random
+import time
 
 
 itens_1 = {
@@ -50,6 +51,9 @@ class Personagem:
         self.contador_de_baus = 0
         self.arma_equipada = None
         self.armadura_equipada = None
+        self.baus_encontrados = 0
+        self.quest_baus_ativa = False
+        self.quest_baus_concluida = False
         self.quests_ativas = []
         self.quests_concluidas = []
         self.npc_visitado = {1: False, 2: False, 3: False}
@@ -69,19 +73,29 @@ class Personagem:
     def mostrar_inventario(self):
         categorias = ["Armas", "Armaduras", "Itens"]
         print("\nInventário:")
-        arma_nome = self.arma_equipada["nome"] if self.arma_equipada and "nome" in self.arma_equipada else 'Nenhuma'
-        armadura_nome = self.armadura_equipada["nome"] if self.armadura_equipada and "nome" in self.armadura_equipada else 'Nenhuma'
-        print(f"Itens equipados: Arma: {arma_nome}, Armadura: {armadura_nome}")
+        print(f"Itens equipados: Arma: {self.arma_equipada['nome'] if self.arma_equipada else 'Nenhuma'}, Armadura: {self.armadura_equipada['nome'] if self.armadura_equipada else 'Nenhuma'}")
         print(f"Vida: {self.vida}/{self.vida_maxima}, XP: {self.xp}, Nível: {self.nivel}, Ouro: {self.ouro}")
         print(f"Atributos - Força: {self.forca_total()}, Defesa: {self.defesa_total()},")
         for i, categoria in enumerate(categorias):
             print(f"\n{categoria}:")
             if not self.inventario[i]:
-                print("  (vazio)")
+                print("Nenhum item nesta categoria.")
             else:
-                for idx, item in enumerate(self.inventario[i], 1):
-                    nome = item.get("nome", "Item desconhecido")
-                    print(f"  [{idx}] {nome}")
+                nomes = [item["nome"] for item in self.inventario[i]]
+                contagem = Counter(nomes)
+                ja_mostrados = set()
+                for idx, item in enumerate(self.inventario[i]):
+                    nome = item["nome"]
+                    if nome not in ja_mostrados:
+                        quantidade = contagem[nome]
+                        atributos = ", ".join(
+                            f"{k}: {v}" for k, v in item.items() if k != "nome"
+                        )
+                        if quantidade > 1:
+                            print(f"{idx+1}. {nome} x{quantidade} ({atributos})")
+                        else:
+                            print(f"{idx+1}. {nome} ({atributos})")
+                        ja_mostrados.add(nome)
 
         escolha = input("\nDeseja usar ou equipar algum item? (1-Sim, 2-Não): ")
         if escolha == "1":
@@ -116,24 +130,11 @@ class Personagem:
         else:
             print("Ok, voltando ao jogo.")
 
-    def usar_item(self, categoria, item_nome):
+    def usar_item(self, categoria, item):
         if categoria < 1 or categoria > 3:
             print("Categoria inválida. Escolha entre 1 (Armas), 2 (Armaduras) ou 3 (Itens).")
-            return
-        for item in self.inventario[categoria - 1]:
-            if item.get("nome") == item_nome:
-                if categoria == 1:
-                    self.arma_equipada = item
-                    print(f"{self.nome} equipou a arma {item_nome}.")
-                elif categoria == 2:
-                    self.armadura_equipada = item
-                    print(f"{self.nome} equipou a armadura {item_nome}.")
-                elif categoria == 3 and "cura" in item:
-                    self.curar(item["cura"])
-                    self.inventario[categoria - 1].remove(item)
-                    print(f"{self.nome} usou o item {item_nome}.")
-                return
-        print(f"{item_nome} não encontrado no inventário.")
+        elif item not in self.inventario[categoria - 1]:
+            print(f"{item} não encontrado no inventário.")
 
     def esta_vivo(self):
         return self.vida > 0
@@ -152,10 +153,6 @@ class Personagem:
                 inimigo.envenenado = True
                 inimigo.turnos_envenenado = 3
                 print(f"{self.nome} envenenou {inimigo.nome}!")
-            elif self.habilidade == "golpe crítico":
-                # Golpe crítico: próximo ataque causa dano dobrado
-                self.furioso = True
-                print(f"{self.nome} prepara um golpe crítico! Próximo ataque dobrado!")
 
     def veneno(self):
         if self.envenenado:
@@ -205,6 +202,8 @@ class Personagem:
             self.nivel += 1
             self.pontos += 3
             print(f"{self.nome} subiu para o nível {self.nivel}!")
+            time.sleep(1)
+            print(f"Você ganhou 3 pontos para upar atributos!\n Caso deseje upar atributos, digite '/atributos' ")
 
     def upar_atributos(self):
         while True:
@@ -247,15 +246,11 @@ class Personagem:
 
     def checar_quests(self):
         for quest in self.quests_ativas:
-            if not quest.concluida and quest.condicao_conclusao(self):
-                quest.concluida = True
-                if quest not in self.quests_concluidas:
-                    self.quests_concluidas.append(quest)
-                if callable(quest.recompensa):
-                    quest.recompensa(self)
-                print(f"Quest '{quest.titulo}' concluída!")
+            quest.checar(self)
+            if quest.concluida and quest not in self.quests_concluidas:
+                self.quests_concluidas.append(quest)
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.nome} (Classe: {self.classe})"
     
 class NPC:
@@ -308,7 +303,7 @@ class Inimigo:
             if self.habilidade == "cura":
                 cura = random.randint(10, 20)
                 self.curar(cura)
-            elif self.habilidade == "fúria":
+            elif self.habilidade == "furia":
                 self.furioso = True
                 print(f"{self.nome} entrou em fúria! Ataque dobrado!")
             elif self.habilidade == "veneno":
@@ -318,7 +313,7 @@ class Inimigo:
 
     def atacar(self, jogador):
         self.habilidade_ativa(jogador)
-        ataque_total = random.randint(1, self.forca)  # Corrigido de self.ataque para self.forca
+        ataque_total = random.randint(1, self.ataque)
         if self.furioso:
             ataque_total *= 2
             print(f"{self.nome} está furioso! Ataque dobrado!")
@@ -409,26 +404,3 @@ def narrativa_inicio():
     print("Você acorda em uma clareira estranha, com memórias confusas.")
     print("Uma voz misteriosa sussurra: 'Restaure o tempo... ou tudo perecerá.'")
     input("Pressione Enter para continuar...\n")
-
-def exemplo_adicionar_item():
-    jogador = Personagem("Nome", defesa=5, forca=5, inteligencia=5, classe="Guerreiro", habilidade="fúria")
-    item_nome = "Espada quebrada"
-    if item_nome in itens_1:
-        item = {"nome": item_nome, **itens_1[item_nome]}
-        jogador.inventario[0].append(item)
-        print(f"Item '{item_nome}' adicionado ao inventário de {jogador.nome}.")
-    else:
-        print(f"Item '{item_nome}' não existe em itens_1.")
-    return jogador
-
-# Crie o jogador primeiro
-jogador = Personagem("Nome", defesa=5, forca=5, inteligencia=5, classe="Guerreiro", habilidade="fúria")
-
-# Agora você pode adicionar itens ao inventário dele
-item_nome = "Espada quebrada"
-if item_nome in itens_1:
-    item = {"nome": item_nome, **itens_1[item_nome]}
-    jogador.inventario[0].append(item)
-    print(f"Item '{item_nome}' adicionado ao inventário de {jogador.nome}.")
-else:
-    print(f"Item '{item_nome}' não existe em itens_1.")
