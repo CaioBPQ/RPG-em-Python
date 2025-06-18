@@ -1,31 +1,25 @@
 from collections import Counter
 import random
 
+
 itens_1 = {
     "Espada quebrada": {"ataque": 5, "durabilidade": 10},
     "Escudo de madeira": {"defesa": 3, "durabilidade": 15},
-    "Poção de cura pequena": {"cura": 10},
+    "Poção de cura pequena": {"cura": 10,},
     "katana enferrujada": {"ataque": 7, "durabilidade": 8},  
 }  
-itens = [
-    ["Poções", "Poção de cura pequena", "Poção de cura média", "Poção de cura grande"],
-    ["Armaduras", "Armadura de couro", "Armadura de ferro", "Armadura de mitril"],
-    ["Armas", "Espada de madeira", "Espada de ferro", "Espada de mitril"]
-]
 
 itens_2 = {
     "Espada longa": {"ataque": 10, "durabilidade": 20},
-    "Escudo de ferro": {"defesa": 4, "durabilidade": 20},  
-    "Poção de cura 2": {"cura": 20, "quantidade": 1},
-    "Peitoral de ferro": {"defesa": 5, "durabilidade": 25},
-    "Poção de cura médio": {"cura": 20},
+    "Escudo de ferro": {"defesa": 4, "durabilidade": 20},
+    "Poção de cura média": {"cura": 20,},
     "katana afiada": {"ataque": 12, "durabilidade": 15},
 }
 
 itens_3 = {
     "Espada Sagrada": {"ataque": 15, "durabilidade": 30},
     "Escudo Forjado": {"defesa": 8, "durabilidade": 35},
-    "Poção de cura grande": {"cura": 30},
+    "Poção de cura grande": {"cura": 30,},
     "katana lendária": {"ataque": 20, "durabilidade": 25},
     "cajado do mago supremo": {"ataque": 15, "durabilidade": 28},
 }
@@ -58,6 +52,10 @@ class Personagem:
         self.armadura_equipada = None
         self.quests_ativas = []
         self.quests_concluidas = []
+
+    def recompensa_moedas(self, quantidade):
+        self.ouro += quantidade
+        print(f"Você recebeu {quantidade} moedas de ouro! Agora tem {self.ouro}.")
 
     def forca_total(self):
         bonus = self.arma_equipada["ataque"] if self.arma_equipada and "ataque" in self.arma_equipada else 0
@@ -118,10 +116,8 @@ class Personagem:
                 elif cat == 3:
                     if "cura" in item:
                         self.curar(item["cura"])
-                        item["quantidade"] -= 1
-                        if item["quantidade"] <= 0:
-                            self.inventario[2].pop(idx_item)
-                            print(f"{item['nome']} acabou!")
+                        self.inventario[2].pop(idx_item)
+                        print(f"{item['nome']} acabou!")
                     else:
                         print("Esse item não pode ser usado.")
             except Exception:
@@ -282,12 +278,13 @@ class NPC:
 
 # === CLASSE DO INIMIGO ===
 class Inimigo:
-    def __init__(self, nome, vida, ataque, defesa, habilidade):
+    def __init__(self, nome, forca, vida, defesa, nivel, habilidade):
         self.nome = nome
-        self.vida = vida
+        self.forca = forca
         self.vida_maxima = vida
-        self.ataque = ataque
+        self.vida = vida
         self.defesa = defesa
+        self.nivel = nivel
         self.habilidade = habilidade
         self.envenenado = False
         self.turnos_envenenado = 0

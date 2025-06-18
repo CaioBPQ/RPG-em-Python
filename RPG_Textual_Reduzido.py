@@ -9,33 +9,28 @@
 
 import random
 import time
-from classes_do_rpg import Personagem, NPC, Inimigo, Quest, escolher_classe, narrativa_inicio
+from classes_do_rpg import Personagem, NPC, Inimigo, Quest, escolher_classe, narrativa_inicio, itens_1, itens_2, itens_3
 
 # === CLASSE DO JOGADOR ===
 local_atual = 1
 itens_1 = {
     "Espada quebrada": {"ataque": 5, "durabilidade": 10},
     "Escudo de madeira": {"defesa": 3, "durabilidade": 15},
-    "Poção de cura 1": {"cura": 10, "quantidade": 1},
+    "Poção de cura pequena": {"cura": 10,},
     "katana enferrujada": {"ataque": 7, "durabilidade": 8},  
 }  
-itens = [
-    ["Poções", "Poção de cura pequena", "Poção de cura média", "Poção de cura grande"],
-    ["Armaduras", "Armadura de couro", "Armadura de ferro", "Armadura de mitril"],
-    ["Armas", "Espada de madeira", "Espada de ferro", "Espada de mitril"]
-]
 
 itens_2 = {
     "Espada longa": {"ataque": 10, "durabilidade": 20},
     "Escudo de ferro": {"defesa": 4, "durabilidade": 20},
-    "Poção de cura 2": {"cura": 20, "quantidade": 1},
+    "Poção de cura média": {"cura": 20,},
     "katana afiada": {"ataque": 12, "durabilidade": 15},
 }
 
 itens_3 = {
     "Espada Sagrada": {"ataque": 15, "durabilidade": 30},
     "Escudo Forjado": {"defesa": 8, "durabilidade": 35},
-    "Poção de cura 3": {"cura": 30, "quantidade": 1},
+    "Poção de cura grande": {"cura": 30,},
     "katana lendária": {"ataque": 20, "durabilidade": 25},
     "cajado do mago supremo": {"ataque": 15, "durabilidade": 28},
 }
@@ -44,29 +39,31 @@ inventario = []
 
 # Inimigos comuns
 inimigos_aleatorios = [
-    ("Goblin", 12, 3, 1, "veneno"),
-    ("Esqueleto", 14, 4, 1, "furia"),
-    ("Orc", 16, 5, 2, "furia"),
-    ("Slime", 10, 2, 2, "cura"),
-    ("Lobo Sangrento", 15, 4, 1, "furia"),
-    ("Espectro", 12, 3, 3, "veneno"),
-    ("Morto-vivo", 14, 4, 2, "cura"),
-    ("Minotauro", 18, 6, 1, "furia"),
+    ("Goblin",2, 12, 6, 1, "veneno"),
+    ("Esqueleto",3, 14, 8, 1, "furia"),
+    ("Orc", 4, 16, 10, 2, "furia"),
+    ("Slime", 1, 10, 4, 2, "cura"),
+    ("Lobo Sangrento", 3, 15, 6, 1, "furia"),
+    ("Espectro", 2, 12, 5, 3, "veneno"),
+    ("Morto-vivo", 3, 14, 7, 2, "cura"),
+    ("Minotauro", 5, 18, 9, 1, "furia"),
 ]
 
 # Bosses
 bosses = {
-    "Dragão Ancião": (30, 7, 4, "furia"),
-    "Kharzuth - Criador dos Dragões": (35, 8, 5, "cura"),
-    "Drenvaar - Senhor do Tempo": (40, 9, 6, "veneno"),
+    "Dragão Ancião": (8, 30, 12, 4, "furia"),
+    "Kharzuth - Criador dos Dragões": (12, 35, 15, 5, "cura"),
+    "Drenvaar - Senhor do Tempo": (18, 40, 18, 6, "veneno"),
 }
 
 # === FALAS NPCS ===
 def condicao_coletar_3_baus(jogador):
     return jogador.contador_de_baus >= 3
 
-def recompensa_moedas_50(jogador):
-    jogador.ouro += 50
+def recompensa_moedas(jogador, quantidade):
+    jogador.ouro += quantidade
+    print(f"\nVocê recebeu {quantidade} moedas de ouro como recompensa!")
+    print(f"Ouro total: {jogador.ouro}\n")
    
 
 # ==== Instância de Quest e NPC ==== 
@@ -79,13 +76,13 @@ def visitar_npc(jogador):
     elif local_atual==3:
         npc_fase3.oferecer_quest(jogador)
 
-def nova_quest_baus():
+def nova_quest_baus(jogador):
     return Quest(
         id='baus_1',
         titulo='Caçador de Baús',
         descricao='Encontre 3 baús misteriosos na Lagoa dos Dragões.',
         condicao_conclusao=condicao_coletar_3_baus,
-        recompensa=recompensa_moedas_50
+        recompensa=recompensa_moedas(jogador,20*local_atual)
     )
 
 quest_baus = Quest(
@@ -93,8 +90,8 @@ quest_baus = Quest(
     titulo='Caçador de Baús',
     descricao='Encontre 3 baús misteriosos na Lagoa dos Dragões.',
     condicao_conclusao=condicao_coletar_3_baus,
-    recompensa=recompensa_moedas_50
-)
+    recompensa=lambda jogador: recompensa_moedas(jogador, 20 * local_atual))
+    
 
 npc_fase1 = NPC(
     nome='Samurai Aposentado',
@@ -186,12 +183,13 @@ def batalha(jogador, inimigo):
         print(f"{jogador.nome}: {jogador.vida} de vida | {inimigo.nome}: {inimigo.vida} de vida")
         escolha_battle = input_comandos("""Escolha sua ação: 
 Atacar(1):
-Esquiva(2):
-Usar poção de vida(3):""", jogador)
+Esquiva(2):""", jogador)
         if escolha_battle in ["1", "atacar"]:
             jogador.atacar(inimigo)
+            time.sleep(1)
             if inimigo.esta_vivo():
                 inimigo.atacar(jogador)
+                time.sleep(1)
         elif escolha_battle in ["2", "desviar"]:
             esquiva = random.random()
             if esquiva < 0.5:
@@ -199,13 +197,11 @@ Usar poção de vida(3):""", jogador)
             else:
                 print("Esquiva falhou! Você tomou dano!")
                 inimigo.atacar(jogador)
-        elif escolha_battle in ["3", "usar poção de vida"]:
-            jogador.curar(30)
-        print(f"{jogador.nome}: {jogador.vida} de vida | {inimigo.nome}: {inimigo.vida} de vida")
         input("Pressione Enter para o próximo turno...\n")
     
     if jogador.esta_vivo():
         print(f"\nVocê derrotou {inimigo.nome}!\n")
+        recompensa_moedas(jogador, 5*inimigo.nivel)  
         jogador.ganhar_xp(10)
         
     else:
@@ -213,50 +209,55 @@ Usar poção de vida(3):""", jogador)
         game_over(jogador)
 
 
-def vendedor(jogador):
-    global local_atual
-    chance = random.random()
-    if chance < 0.4:
-        print("\nVocê encontrou um vendedor!")
-        print("Itens à venda:")
-        print("[1] Espada de madeira - 10 Moedas")
-        print("[2] Escudo de madeira - 10 Moedas")
-        print("[3] Poção de cura pequena - 15 Moedas")
-        escolha = input(f"Você tem {jogador.ouro} moedas. Deseja comprar algo? (s/n): ").lower().strip()
-        while escolha not in ["s", "sim", "não", "n", "nao"]:
-            print("Erro informe novamente: ")
-            escolha = input("Quer comprar algo? (s/n): ").lower().strip()
-        if escolha in ["s", "sim"]:
-            while True:
-                item = input("Qual item você deseja comprar? (1/2/3): ")
-                if item == "1":
-                    if jogador.ouro >= 10:
-                        jogador.ouro -= 10
-                        jogador.inventario[0].append({"nome": "Espada de madeira", **itens_1["Espada quebrada"]})
-                        print("Você comprou uma Espada de madeira!")
-                    else:
-                        print("Você não tem moedas suficientes!")
-                elif item == "2":
-                    if jogador.ouro >= 10:
-                        jogador.ouro -= 10
-                        jogador.inventario[1].append({"nome": "Escudo de madeira", **itens_1["Escudo de madeira"]})
-                        print("Você comprou um Escudo de madeira!")
-                    else:
-                        print("Você não tem moedas suficientes!")
-                elif item == "3":
-                    if jogador.ouro >= 15:
-                        jogador.ouro -= 15
-                        jogador.inventario[2].append({"nome": "Poção de cura pequena", **itens_1["Poção de cura 1"]})
-                        print("Você comprou uma Poção de cura pequena!")
-                    else:
-                        print("Você não tem moedas suficientes!")
-                else:
-                    print("Item inválido.")
-                novamente = input("Deseja comprar mais algo? (s/n): ").lower().strip()
-                if novamente not in ["s", "sim"]:
-                    break
+def vendedor(jogador, itens_fase, fase_atual):
+    print("\nVocê encontrou um vendedor!")
+    print("Itens à venda:")
+    opcoes = []
+    idx = 1
+    # Ajuste de preço conforme a fase
+    acrescimo = 0
+    if fase_atual == 2:
+        acrescimo = 5
+    elif fase_atual == 3:
+        acrescimo = 10
+    for nome_item, props in itens_fase.items():
+        if "ataque" in props or "defesa" in props:
+            preco = 10 + acrescimo
+        elif "cura" in props:
+            preco = 15 + acrescimo
         else:
-            print("Ok, nos vemos em uma próxima aventura.\n")
+            preco = 10 + acrescimo
+        print(f"[{idx}] {nome_item} - {preco} Moedas")
+        opcoes.append((nome_item, preco, props))
+        idx += 1
+    escolha = input_comandos(f"Você tem {jogador.ouro} moedas. Deseja comprar algo? (s/n): ", jogador)
+    while escolha not in ["s", "sim", "não", "n", "nao"]:
+        print("Erro informe novamente: ")
+        escolha = input_comandos("Quer comprar algo? (s/n): ", jogador)
+    if escolha in ["s", "sim"]:
+        while True:
+            item = input_comandos(f"Qual item você deseja comprar? (1-{len(opcoes)}): ", jogador)
+            if item.isdigit() and 1 <= int(item) <= len(opcoes):
+                idx_item = int(item) - 1
+                nome_item, preco, props = opcoes[idx_item]
+                if jogador.ouro >= preco:
+                    jogador.ouro -= preco
+                    if "ataque" in props:
+                        jogador.inventario[0].append({"nome": nome_item, **props})
+                    elif "defesa" in props:
+                        jogador.inventario[1].append({"nome": nome_item, **props})
+                    elif "cura" in props:
+                        jogador.inventario[2].append({"nome": nome_item, **props})
+                    print(f"Você comprou {nome_item}!")
+                else:
+                    print("Você não tem moedas suficientes!")
+            else:
+                print("Item inválido.")
+            novamente = input_comandos("Deseja comprar mais algo? (s/n): ", jogador)
+            if novamente not in ["s", "sim"]:
+                break
+    else:
+        print("Ok, nos vemos em uma próxima aventura.\n")
 
 def deseja_ir_para_proximo_mapa():
     resposta = input("Deseja ir para o próximo mapa? (s/n): ").strip().lower()
@@ -265,7 +266,7 @@ def deseja_ir_para_proximo_mapa():
 def evento_aleatorio(jogador, itens_fase):
     evento = random.choices(
         ["nada", "bau", "inimigo", "vendedor", "npc"],
-        weights=[10, 25, 5, 15, 15],
+        weights=[10, 25, 10, 15, 20],
         k=1
     )[0]
 
@@ -291,10 +292,14 @@ def evento_aleatorio(jogador, itens_fase):
         jogador.contador_de_baus += 1
 
     elif evento == "vendedor":
-        vendedor(jogador)
+        vendedor(jogador, itens_fase, fase_atual=local_atual)
 
     elif evento == "npc":
-        visitar_npc(jogador)
+        if not jogador.npc_visitado[local_atual]:
+            visitar_npc(jogador)
+            jogador.npc_visitado[local_atual] = True
+        else:
+            print("Você não encontrou nada... só vento e silêncio.")
 
     else:
         print("Você não encontrou nada... só vento e silêncio.")
@@ -322,24 +327,30 @@ def jogar():
     narrativa_inicio()
     jogador = escolher_classe()
     print(f"Bem-vindo, {jogador.nome}! Sua aventura começa agora.\n")
+    
+    jogador.quest_baus_ativa = True
+    jogador.baus_encontrados = 0
+    jogador.quest_baus_concluida = False
 
+    print("Para saber mais sobre os comandos, digite /ajuda ou /help.\n")
+    
     fases = [
-        (1, itens_1, "Lagoa dos Dragões", "Dragão Ancião", (40, 8, 5, "furia")),
-        (2, itens_2, "Berço de Kharzuth", "Kharzuth - Criador dos Dragões", (60, 10, 7, "cura")),
-        (3, itens_3, "Castelo de Drenvaar", "Drenvaar - Senhor do Tempo", (80, 12, 9, "veneno")),
+        (1, itens_1, "Lagoa dos Dragões", ("Dragão Ancião", 8, 40, 5, 3, "furia")),
+        (2, itens_2, "Berço de Kharzuth", ("Kharzuth - Criador dos Dragões", 10, 60, 7, 5, "cura")),
+        (3, itens_3, "Castelo de Drenvaar", ("Drenvaar - Senhor do Tempo", 12, 80, 9, 7, "veneno")),
     ]
 
-    for idx, (local, itens_fase, nome_area, boss_nome, boss_stats) in enumerate(fases, 1):
+    for idx, (local, itens_fase, nome_area, boss_stats) in enumerate(fases, 1):
         print(f"\n{'='*30}\nFase {idx}: {nome_area}\n{'='*30}")
         explorar(jogador, local, itens_fase, nome_area)
         if not jogador.esta_vivo():
             return
-        print(f"\nVocê encontrou o boss: {boss_nome}!")
-        boss = Inimigo(boss_nome, *boss_stats)
+        boss = Inimigo(*boss_stats)
+        print(f"\nVocê encontrou o boss: {boss.nome}!")
         batalha(jogador, boss)
         if not jogador.esta_vivo():
             return
-        print(f"Parabéns! Você derrotou {boss_nome} e pode avançar para a próxima área!")
+        print(f"Parabéns! Você derrotou {boss.nome} e pode avançar para a próxima área!")
         jogador.contador_de_baus = 0  
 
     print("Você atravessou o portal do tempo e chegou em ???")
@@ -424,5 +435,8 @@ def jogar():
     print("Obrigado por jogar! Você completou a aventura!")
     exit()
 
+
+
 if __name__ == "__main__":
     jogar()
+
