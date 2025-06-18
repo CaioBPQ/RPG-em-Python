@@ -326,6 +326,8 @@ def explorar(jogador, local, itens_fase, nome_area):
 def jogar():
     narrativa_inicio()
     jogador = escolher_classe()
+    jogador.npc_visitado = {1: False, 2: False, 3: False}
+
     print(f"Bem-vindo, {jogador.nome}! Sua aventura começa agora.\n")
     
     jogador.quest_baus_ativa = True

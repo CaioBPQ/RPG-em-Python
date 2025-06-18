@@ -52,6 +52,7 @@ class Personagem:
         self.armadura_equipada = None
         self.quests_ativas = []
         self.quests_concluidas = []
+        self.npc_visitado = {1: False, 2: False, 3: False}
 
     def recompensa_moedas(self, quantidade):
         self.ouro += quantidade
