@@ -50,6 +50,9 @@ class Personagem:
         self.contador_de_baus = 0
         self.arma_equipada = None
         self.armadura_equipada = None
+        self.baus_encontrados = 0
+        self.quest_baus_ativa = False
+        self.quest_baus_concluida = False
         self.quests_ativas = []
         self.quests_concluidas = []
         self.npc_visitado = {1: False, 2: False, 3: False}

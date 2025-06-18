@@ -58,7 +58,7 @@ bosses = {
 
 # === FALAS NPCS ===
 def condicao_coletar_3_baus(jogador):
-    return jogador.contador_de_baus >= 3
+    return jogador.baus_encontrados >= 3
 
 def recompensa_moedas(jogador, quantidade):
     jogador.ouro += quantidade
@@ -66,23 +66,38 @@ def recompensa_moedas(jogador, quantidade):
     print(f"Ouro total: {jogador.ouro}\n")
    
 
-# ==== Instância de Quest e NPC ==== 
-def visitar_npc(jogador):
-    global local_atual
-    if local_atual==1:
-     npc_fase1.oferecer_quest(jogador)
-    elif local_atual==2:
-     npc_fase2.oferecer_quest(jogador)
-    elif local_atual==3:
-        npc_fase3.oferecer_quest(jogador)
+# ==== NPC ==== 
+def visitar_npc(jogador, fase_atual):
+    npcs = {1: npc_fase1, 2: npc_fase2, 3: npc_fase3}
+    npc = npcs.get(fase_atual)
+    if not npc:
+        print("Não há NPC nesta fase.")
+        return
+    print(f"Você encontrou {npc.nome}!")
+    time.sleep(1)
+    for fala in npc.dialogo:
+        print(f"{npc.nome}: {fala}")
+        time.sleep(1)
+    resposta = input_comandos("Deseja aceitar a missão? (s/n): ", jogador)
+    time.sleep(1)
+    if resposta in ["s", "sim"]:
+        print(f"{npc.nome}: Excelente! Volte quando completar a missão.")
+        jogador.quest_baus_ativa = True
+        jogador.baus_encontrados = 0
+        jogador.quest_baus_concluida = False
+        jogador.quest_baus = npc.quest 
+        time.sleep(1)
+    else:
+        print(f"{npc.nome}: Que pena. Talvez outra hora.")
+        time.sleep(1)
 
-def nova_quest_baus(jogador):
+def nova_quest_baus(fase):
     return Quest(
-        id='baus_1',
+        id=f'baus_{fase}',
         titulo='Caçador de Baús',
-        descricao='Encontre 3 baús misteriosos na Lagoa dos Dragões.',
+        descricao=f'Encontre 3 baús misteriosos na fase {fase}.',
         condicao_conclusao=condicao_coletar_3_baus,
-        recompensa=recompensa_moedas(jogador,20*local_atual)
+        recompensa=lambda jogador: recompensa_moedas(jogador, 20 * fase)
     )
 
 quest_baus = Quest(
@@ -100,17 +115,17 @@ npc_fase1 = NPC(
         'Preciso que você recupere 3 baús perdidos.',
         'Eles estão espalhados pela Lagoa dos Dragões.'
     ],
-    quest=quest_baus
+    quest=nova_quest_baus(1)
 )
 
-npc_fase2= NPC(
+npc_fase2 = NPC(
     nome='Dio Cavalheiro Esquecido',
     dialogo=[
         'Ah, jovem aventureiro…',
         'Preciso que você recupere 3 baús perdidos.',
-        'Eles estão espalhados pela Lagoa dos Dragões.'
+        'Eles estão espalhados pelo Berço de Kharzuth.'
     ],
-    quest=quest_baus
+    quest=nova_quest_baus(2)
 )
 
 npc_fase3 = NPC(
@@ -118,9 +133,9 @@ npc_fase3 = NPC(
     dialogo=[
         'Ah, jovem aventureiro…',
         'Preciso que você recupere 3 baús perdidos.',
-        'Eles estão espalhados pela Lagoa dos Dragões.'
+        'Eles estão espalhados pelo Castelo de Drenvaar.'
     ],
-    quest=quest_baus
+    quest=nova_quest_baus(3)
 )
 # === COMANDOS ===
 
@@ -180,7 +195,9 @@ def batalha(jogador, inimigo):
         jogador.veneno()
         inimigo.veneno()
         print(f"\n{jogador.nome} vs {inimigo.nome}")
+        time.sleep(1)
         print(f"{jogador.nome}: {jogador.vida} de vida | {inimigo.nome}: {inimigo.vida} de vida")
+        time.sleep(1)
         escolha_battle = input_comandos("""Escolha sua ação: 
 Atacar(1):
 Esquiva(2):""", jogador)
@@ -197,24 +214,28 @@ Esquiva(2):""", jogador)
             else:
                 print("Esquiva falhou! Você tomou dano!")
                 inimigo.atacar(jogador)
-        input("Pressione Enter para o próximo turno...\n")
-    
+            time.sleep(1)
+        input_comandos("Pressione Enter para o próximo turno...\n", jogador)
+        time.sleep(1)
     if jogador.esta_vivo():
         print(f"\nVocê derrotou {inimigo.nome}!\n")
+        time.sleep(1)
         recompensa_moedas(jogador, 5*inimigo.nivel)  
         jogador.ganhar_xp(10)
-        
+        time.sleep(1)
     else:
         print(f"\nVocê foi derrotado por {inimigo.nome}...\n")
+        time.sleep(1)
         game_over(jogador)
 
 
 def vendedor(jogador, itens_fase, fase_atual):
     print("\nVocê encontrou um vendedor!")
+    time.sleep(1)
     print("Itens à venda:")
+    time.sleep(1)
     opcoes = []
     idx = 1
-    # Ajuste de preço conforme a fase
     acrescimo = 0
     if fase_atual == 2:
         acrescimo = 5
@@ -266,7 +287,7 @@ def deseja_ir_para_proximo_mapa():
 def evento_aleatorio(jogador, itens_fase):
     evento = random.choices(
         ["nada", "bau", "inimigo", "vendedor", "npc"],
-        weights=[10, 25, 10, 15, 20],
+        weights=[10, 25, 10, 15, 2000],
         k=1
     )[0]
 
@@ -291,12 +312,21 @@ def evento_aleatorio(jogador, itens_fase):
         print(f"Você encontrou: {item_nome}\n")
         jogador.contador_de_baus += 1
 
+        if jogador.quest_baus_ativa and not jogador.quest_baus_concluida:
+            jogador.baus_encontrados += 1
+            print(f"Baús encontrados: {jogador.baus_encontrados}/3")
+            if condicao_coletar_3_baus(jogador):
+                jogador.quest_baus_concluida = True
+                recompensa_moedas(jogador, 20*local_atual)
+                print("Parabéns! Você concluiu a quest dos baús!")
+        
+
     elif evento == "vendedor":
         vendedor(jogador, itens_fase, fase_atual=local_atual)
 
     elif evento == "npc":
         if not jogador.npc_visitado[local_atual]:
-            visitar_npc(jogador)
+            visitar_npc(jogador, local_atual)
             jogador.npc_visitado[local_atual] = True
         else:
             print("Você não encontrou nada... só vento e silêncio.")
@@ -308,19 +338,28 @@ def evento_aleatorio(jogador, itens_fase):
 
 def explorar(jogador, local, itens_fase, nome_area):
     print(f"\nVocê chegou em {nome_area}!")
+    time.sleep(1)
     while jogador.esta_vivo():
-        resposta = input_comandos("Deseja explorar esta área? (s/n): ", jogador).lower().strip()
+        resposta = None
+        while not resposta:
+            resposta = input_comandos("Deseja explorar esta área? (s/n): ", jogador)
+        resposta = resposta.lower().strip()
         if resposta not in ["s", "sim"]:
             print("Você decidiu parar de explorar esta área.")
+            time.sleep(1)
             break
         print(f"Você começou a explorar {nome_area}...")
         time.sleep(1.5)
         continuar = evento_aleatorio(jogador, itens_fase)
         if not continuar:
             break
-        continuar_explorando = input_comandos("Deseja continuar explorando? (s/n): ", jogador).lower().strip()
+        continuar_explorando = None
+        while not continuar_explorando:
+            continuar_explorando = input_comandos("Deseja continuar explorando? (s/n): ", jogador)
+        continuar_explorando = continuar_explorando.lower().strip()
         if continuar_explorando not in ["s", "sim"]:
             print("Você decidiu parar de explorar esta área.")
+            time.sleep(1)
             break
 
 def jogar():
@@ -378,6 +417,7 @@ def jogar():
         jogador.contador_de_baus += 1
         if jogador.contador_de_baus >= 3:
             print("Você encontrou um goblin que saiu de um portal, no meio da vastidão do fundo branco!!")
+            time.sleep(1)
             print("Goblin chega sorrateiramente em você e pergunta:\nquer participar de um jogo de adivinhação?")
             escolhaGoblin = input_comandos("Quer participar do jogo de adivinhação? (s/n): ", jogador).lower().strip()
             while escolhaGoblin not in ["s", "sim", "n", "nao", "não"]:
@@ -432,7 +472,7 @@ def jogar():
                         return
                     else:
                         print("O goblin desaparece em um portal, deixando você sozinho no desconhecido.")
-            break  # Sai do loop após o evento do goblin
+            break
 
     print("Obrigado por jogar! Você completou a aventura!")
     exit()
