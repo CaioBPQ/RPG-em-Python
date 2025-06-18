@@ -4,7 +4,7 @@ import random
 itens_1 = {
     "Espada quebrada": {"ataque": 5, "durabilidade": 10},
     "Escudo de madeira": {"defesa": 3, "durabilidade": 15},
-    "Poção de cura 1": {"cura": 10, "quantidade": 1},
+    "Poção de cura pequena": {"cura": 10},
     "katana enferrujada": {"ataque": 7, "durabilidade": 8},  
 }  
 itens = [
@@ -15,15 +15,17 @@ itens = [
 
 itens_2 = {
     "Espada longa": {"ataque": 10, "durabilidade": 20},
-    "Peitoral de ferro": {"defesa": 5, "durabilidade": 25},
+    "Escudo de ferro": {"defesa": 4, "durabilidade": 20},  
     "Poção de cura 2": {"cura": 20, "quantidade": 1},
+    "Peitoral de ferro": {"defesa": 5, "durabilidade": 25},
+    "Poção de cura médio": {"cura": 20},
     "katana afiada": {"ataque": 12, "durabilidade": 15},
 }
 
 itens_3 = {
     "Espada Sagrada": {"ataque": 15, "durabilidade": 30},
     "Escudo Forjado": {"defesa": 8, "durabilidade": 35},
-    "Poção de cura 3": {"cura": 30, "quantidade": 1},
+    "Poção de cura grande": {"cura": 30},
     "katana lendária": {"ataque": 20, "durabilidade": 25},
     "cajado do mago supremo": {"ataque": 15, "durabilidade": 28},
 }
@@ -133,6 +135,9 @@ class Personagem:
         elif item not in self.inventario[categoria - 1]:
             print(f"{item} não encontrado no inventário.")
 
+    def esta_vivo(self):
+        return self.vida > 0
+
 
     def habilidade_ativa(self, inimigo):
         chance = random.random()
@@ -173,7 +178,7 @@ class Personagem:
         defesa_total = inimigo.defesa
         if hasattr(inimigo, "armadura_equipada") and inimigo.armadura_equipada and "defesa" in inimigo.armadura_equipada:
             defesa_total += inimigo.armadura_equipada["defesa"]
-        dano = max(0, ataque_total - defesa_total + random.randint(-2, 2))
+        dano = max(1, ataque_total - defesa_total + random.randint(-2, 2))
         inimigo.vida -= dano
         print(f"\n{self.nome} atacou {inimigo.nome} e causou {dano} de dano!\n")
         if inimigo.vida <= 0:
@@ -190,36 +195,45 @@ class Personagem:
 
     def ganhar_xp(self, quantidade):
         self.xp += quantidade
-        if self.xp >= self.nivel * 10:
+        print(f"{self.nome} ganhou {quantidade} XP.")
+        while self.xp >= self.nivel * 10:
+            self.xp -= self.nivel * 10 
             self.nivel += 1
             self.pontos += 3
             print(f"{self.nome} subiu para o nível {self.nivel}!")
-            self.upar_atributos()
 
     def upar_atributos(self):
-        while self.pontos > 0:
-            print(f"\nPontos disponíveis: {self.pontos}")
-            print("1. Aumentar Força")
-            print("2. Aumentar Defesa")
-            print("3. Aumentar Inteligência")
-            escolha = input("Escolha um atributo para upar: ")
-            if escolha == "1":
-                self.forca += 1
-                self.pontos -= 1
-                print(f"Força aumentada para {self.forca}")
-            elif escolha == "2":
-                self.defesa += 1
-                self.vida_maxima += 10
-                self.vida += 10
-                self.pontos -= 1
-                print(f"Defesa aumentada para {self.defesa}")
-            elif escolha == "3":
-                self.arcano += 1
-                self.pontos -= 1
-                print(f"Inteligência aumentada para {self.arcano}")
+        while True:
+            if self.pontos > 0:
+                print(f"\nPontos disponíveis: {self.pontos}")
+                print("1. Aumentar Força")
+                print("2. Aumentar Defesa")
+                escolha = input("Escolha um atributo para upar: ")
+                if escolha == "1":
+                    self.forca += 1
+                    self.pontos -= 1
+                    print(f"Força aumentada para {self.forca}")
+                    if self.pontos > 0:
+                        continuar = input("Deseja continuar upar atributos? (s/n): ").strip().lower()
+                        if continuar not in ['s', 'sim']:
+                            print("Saindo do menu de atributos.")
+                            break
+                elif escolha == "2":
+                    self.defesa += 1
+                    self.vida_maxima += 10
+                    self.vida += 10
+                    self.pontos -= 1
+                    print(f"Defesa aumentada para {self.defesa}")
+                    if self.pontos > 0:
+                        continuar = input("Deseja continuar upar atributos? (s/n): ").strip().lower()
+                        if continuar not in ['s', 'sim']:
+                            print("Saindo do menu de atributos.")
+                            break
+                else:
+                    print("Escolha inválida.")
             else:
-                print("Escolha inválida.")
-
+                print("Nenhum ponto disponível para upar atributos.")
+                break
     def tem_quest(self, quest_id):
         return any(q.id == quest_id for q in self.quests_ativas)
 
@@ -348,14 +362,14 @@ def escolher_classe():
     nome = input("Digite o nome do seu personagem: ")
 
     print("\nEscolha sua classe:")
-    print("1. Guerreiro (vida alta, ataque médio, defesa alta)")
-    print("2. Mago (vida baixa, ataque alto, defesa baixa)")
-    print("3. Arqueiro (vida média, ataque médio-alto, defesa média)")
+    print("1. Guerreiro (vida alta, ataque médio, defesa alta, habilidade: Fúria)")
+    print("2. Paladino (vida média, ataque médio, defesa alta, habilidade: Cura)")
+    print("3. Samurai (vida média, ataque alto, defesa média, habilidade: Golpe Crítico)")
 
     opcoes = {
         "1": "Guerreiro",
-        "2": "Mago",
-        "3": "Arqueiro",
+        "2": "Paladino",
+        "3": "Samurai",
         "4": "classe dev"
     }
 
@@ -368,11 +382,11 @@ def escolher_classe():
             print("Classe inválida, informe novamente por favor.")
 
     if classe == "Guerreiro":
-        jogador = Personagem(nome, defesa=7, forca=6, inteligencia=3, classe=classe, habilidade="fúria")
-    elif classe == "Mago":
-        jogador = Personagem(nome, defesa=3, forca=4, inteligencia=8, classe=classe, habilidade="cura")
-    elif classe == "Arqueiro":
-        jogador = Personagem(nome, defesa=5, forca=7, inteligencia=4, classe=classe, habilidade="veneno")
+        jogador = Personagem(nome, defesa=5, forca=5, inteligencia=2, classe=classe, habilidade="fúria")
+    elif classe == "Paladino":
+        jogador = Personagem(nome, defesa=5, forca=4, inteligencia=4, classe=classe, habilidade="cura")
+    elif classe == "Samurai":
+        jogador = Personagem(nome, defesa=4, forca=6, inteligencia=2, classe=classe, habilidade="golpe crítico")
     elif classe == "classe dev":
         jogador = Personagem(nome, defesa=100, forca=100, inteligencia=100, classe=classe, habilidade="cura")
         print("Você é um dev! Você tem todos os atributos maximizados!")
@@ -386,15 +400,3 @@ def narrativa_inicio():
     print("Você acorda em uma clareira estranha, com memórias confusas.")
     print("Uma voz misteriosa sussurra: 'Restaure o tempo... ou tudo perecerá.'")
     input("Pressione Enter para continuar...\n")
-    
-
-heroi = Personagem("Herói", 5, 5, 5, "Guerreiro", "cura")
-
-heroi.inventario[0].append({"nome": "Espada longa", **itens_2["Espada longa"]})
-heroi.inventario[0].append({"nome": "Espada longa", **itens_2["Espada longa"]})
-heroi.inventario[1].append({"nome": "Escudo de ferro", **itens_2["Escudo de ferro"]})
-heroi.inventario[2].append({"nome": "Poção de cura 2", **itens_2["Poção de cura 2"]})
-
-heroi.mostrar_inventario()
-
-heroi.mostrar_inventario()
