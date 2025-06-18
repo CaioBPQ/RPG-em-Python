@@ -1,5 +1,6 @@
 from collections import Counter
 import random
+import time
 
 
 itens_1 = {
@@ -201,6 +202,8 @@ class Personagem:
             self.nivel += 1
             self.pontos += 3
             print(f"{self.nome} subiu para o nível {self.nivel}!")
+            time.sleep(1)
+            print(f"Você ganhou 3 pontos para upar atributos!\n Caso deseje upar atributos, digite '/atributos' ")
 
     def upar_atributos(self):
         while True:
