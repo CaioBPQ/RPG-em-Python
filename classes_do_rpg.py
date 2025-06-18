@@ -178,7 +178,7 @@ class Personagem:
         defesa_total = inimigo.defesa
         if hasattr(inimigo, "armadura_equipada") and inimigo.armadura_equipada and "defesa" in inimigo.armadura_equipada:
             defesa_total += inimigo.armadura_equipada["defesa"]
-        dano = max(0, ataque_total - defesa_total + random.randint(-2, 2))
+        dano = max(1, ataque_total - defesa_total + random.randint(-2, 2))
         inimigo.vida -= dano
         print(f"\n{self.nome} atacou {inimigo.nome} e causou {dano} de dano!\n")
         if inimigo.vida <= 0:
@@ -195,36 +195,45 @@ class Personagem:
 
     def ganhar_xp(self, quantidade):
         self.xp += quantidade
-        if self.xp >= self.nivel * 10:
+        print(f"{self.nome} ganhou {quantidade} XP.")
+        while self.xp >= self.nivel * 10:
+            self.xp -= self.nivel * 10 
             self.nivel += 1
             self.pontos += 3
             print(f"{self.nome} subiu para o nível {self.nivel}!")
-            self.upar_atributos()
 
     def upar_atributos(self):
-        while self.pontos > 0:
-            print(f"\nPontos disponíveis: {self.pontos}")
-            print("1. Aumentar Força")
-            print("2. Aumentar Defesa")
-            print("3. Aumentar Inteligência")
-            escolha = input("Escolha um atributo para upar: ")
-            if escolha == "1":
-                self.forca += 1
-                self.pontos -= 1
-                print(f"Força aumentada para {self.forca}")
-            elif escolha == "2":
-                self.defesa += 1
-                self.vida_maxima += 10
-                self.vida += 10
-                self.pontos -= 1
-                print(f"Defesa aumentada para {self.defesa}")
-            elif escolha == "3":
-                self.arcano += 1
-                self.pontos -= 1
-                print(f"Inteligência aumentada para {self.arcano}")
+        while True:
+            if self.pontos > 0:
+                print(f"\nPontos disponíveis: {self.pontos}")
+                print("1. Aumentar Força")
+                print("2. Aumentar Defesa")
+                escolha = input("Escolha um atributo para upar: ")
+                if escolha == "1":
+                    self.forca += 1
+                    self.pontos -= 1
+                    print(f"Força aumentada para {self.forca}")
+                    if self.pontos > 0:
+                        continuar = input("Deseja continuar upar atributos? (s/n): ").strip().lower()
+                        if continuar not in ['s', 'sim']:
+                            print("Saindo do menu de atributos.")
+                            break
+                elif escolha == "2":
+                    self.defesa += 1
+                    self.vida_maxima += 10
+                    self.vida += 10
+                    self.pontos -= 1
+                    print(f"Defesa aumentada para {self.defesa}")
+                    if self.pontos > 0:
+                        continuar = input("Deseja continuar upar atributos? (s/n): ").strip().lower()
+                        if continuar not in ['s', 'sim']:
+                            print("Saindo do menu de atributos.")
+                            break
+                else:
+                    print("Escolha inválida.")
             else:
-                print("Escolha inválida.")
-
+                print("Nenhum ponto disponível para upar atributos.")
+                break
     def tem_quest(self, quest_id):
         return any(q.id == quest_id for q in self.quests_ativas)
 
@@ -373,11 +382,11 @@ def escolher_classe():
             print("Classe inválida, informe novamente por favor.")
 
     if classe == "Guerreiro":
-        jogador = Personagem(nome, defesa=7, forca=6, inteligencia=3, classe=classe, habilidade="fúria")
+        jogador = Personagem(nome, defesa=5, forca=5, inteligencia=2, classe=classe, habilidade="fúria")
     elif classe == "Paladino":
-        jogador = Personagem(nome, defesa=7, forca=5, inteligencia=5, classe=classe, habilidade="cura")
+        jogador = Personagem(nome, defesa=5, forca=4, inteligencia=4, classe=classe, habilidade="cura")
     elif classe == "Samurai":
-        jogador = Personagem(nome, defesa=5, forca=8, inteligencia=3, classe=classe, habilidade="veneno")
+        jogador = Personagem(nome, defesa=4, forca=6, inteligencia=2, classe=classe, habilidade="golpe crítico")
     elif classe == "classe dev":
         jogador = Personagem(nome, defesa=100, forca=100, inteligencia=100, classe=classe, habilidade="cura")
         print("Você é um dev! Você tem todos os atributos maximizados!")
